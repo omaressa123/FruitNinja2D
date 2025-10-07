@@ -28,3 +28,28 @@ fruits = []
 score = 0
 lives = 3
 blade_points = []
+game_over = False
+
+# Scoring System
+for fruit in fruits:
+    if fruit.is_sliced:
+        score+=10
+        fruits.remove(fruit)
+
+# multiple Fruit Sliced 
+if multiple_sliced:
+    score+=30
+
+# Missed Fruit 
+for fruit in fruits:
+    if fruit.y > screen_height: # If the fruit falls off the screen
+        lives -=1
+        fruits.remove(fruit)
+        if lives <= 0:
+            game_over = True
+
+# Bomb Hit
+for bomb in bombs:
+    if bomb.is_sliced:
+        game_over = True
+
