@@ -1,9 +1,10 @@
 import pygame
 import random
+import os
 
 class Fruit:
     def __init__(self, image_path, x, y, speed_x, speed_y):
-        self.image = pygame.image.load(image_path)
+        self.image = pygame.image.load(os.path.join("assets", image_path)) # Use os.path.join
         self.image = pygame.transform.scale(self.image, (70, 70))
         self.x = x
         self.y = y
@@ -13,7 +14,7 @@ class Fruit:
         self.rect = self.image.get_rect(center=(self.x, self.y))
         self.sliced = False
 
-    def move(self):
+    def update(self):
         """Move fruit with gravity."""
         self.x += self.speed_x
         self.y += self.speed_y
@@ -24,7 +25,7 @@ class Fruit:
         if not self.sliced:
             screen.blit(self.image, self.rect)
 
-    def check_sliced(self, blade_points):
+    def check_slice(self, blade_points):
         """
         Check if the fruit has been sliced by the blade.
         blade_points: list of (x, y) tuples representing the blade's path.
@@ -39,14 +40,12 @@ class Fruit:
         return False
 
     @staticmethod
-    def spawn_random(image_path, screen_width, screen_height):
-        """
-        Spawn a fruit at a random position at the bottom of the screen
-        with a random upward velocity and random horizontal speed.
-        """
+    def spawn_random(screen_width, screen_height):
+        fruit_images = ["apple.png", "banana.png", "orange.png"] # Example fruit images
+        chosen_image = random.choice(fruit_images)
         x = random.randint(100, screen_width - 100)
         y = screen_height + 50
         speed_x = random.uniform(-4, 4)
         speed_y = random.uniform(-12, -8)
-        return Fruit(image_path, x, y, speed_x, speed_y)
+        return Fruit(chosen_image, x, y, speed_x, speed_y)
 
