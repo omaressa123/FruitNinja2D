@@ -16,10 +16,11 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Fruit Ninja 2D")
 
 # Load assets
-background = pygame.image.load(os.path.join("assets", "images.jpeg")) 
+background = pygame.image.load(os.path.join("assets", "images.jpeg"))
+background = pygame.transform.scale(background, (WIDTH, HEIGHT)) # Scale background to screen size
 slice_sound = pygame.mixer.Sound(os.path.join("assets", "slice.wav")) 
-#bomb_sound = pygame.mixer.Sound(os.path.join("assets", "bomb.wav")) 
-background_music = pygame.mixer.Sound(os.path.join("assets", "audio BE 20251014015520.wav"))
+bomb_sound = pygame.mixer.Sound(os.path.join("assets", "bomb.wav")) 
+background_music = pygame.mixer.Sound(os.path.join("assets", "background_music.wav"))
 
 clock = pygame.time.Clock()
 font = pygame.font.Font(None, 40)
@@ -30,7 +31,12 @@ bombs = [] # Initialize bombs list
 score = 0
 lives = 3
 blade_points = []
-game_over = False
+
+# Game mechanics variables
+max_fruits = 3
+spawn_interval = 2.0  # seconds
+spawn_timer = 0
+last_score_check = 0
 
 # Game states
 START_SCREEN = 0
@@ -54,7 +60,18 @@ def game_over_screen():
     screen.blit(restart_text, (WIDTH // 2 - restart_text.get_width() // 2, HEIGHT // 2))
     pygame.display.flip()
 
+def spawn_items():
+    global spawn_timer
+    spawn_timer += clock.get_time() / 1000.0  # Time in seconds
+    if spawn_timer >= spawn_interval and len(fruits) + len(bombs) < max_fruits:
+        if random.randint(0, 100) < 70:  # Higher chance to spawn fruit
+            fruits.append(Fruit.spawn_random(WIDTH, HEIGHT))
+        elif random.randint(0, 100) < 10:  # Lower chance to spawn bomb
+            bombs.append(Bomb.spawn_random(WIDTH, HEIGHT))
+        spawn_timer = 0
+
 background_music.play(-1)  # Play background music indefinitely
+
 # Main game loop
 running = True
 while running:
@@ -68,13 +85,20 @@ while running:
                 lives = 3
                 fruits = []
                 bombs = []
+                max_fruits = 3
+                spawn_interval = 2.0
+                spawn_timer = 0
+                last_score_check = 0
             elif current_game_state == GAME_OVER and event.key == pygame.K_SPACE:
                 current_game_state = GAME_PLAY
                 score = 0
                 lives = 3
                 fruits = []
                 bombs = []
-                game_over = False
+                max_fruits = 3
+                spawn_interval = 2.0
+                spawn_timer = 0
+                last_score_check = 0
             elif event.key == pygame.K_ESCAPE:
                 running = False
 
@@ -83,17 +107,13 @@ while running:
     elif current_game_state == GAME_PLAY:
         screen.blit(background, (0, 0))
 
-        # Spawn fruits and bombs (temporary, will be moved to a function later)
-        if random.randint(0, 100) < 5: # Adjust spawn rate
-            fruits.append(Fruit.spawn_random(WIDTH, HEIGHT)) # Call spawn_random without image_path
-        if random.randint(0, 200) < 2: # Adjust bomb spawn rate
-            bombs.append(Bomb.spawn_random(WIDTH, HEIGHT))
+        spawn_items()  # Call the new function to spawn fruits and bombs
 
         # Update and draw fruits
         for fruit in fruits[:]:
             fruit.update()
             fruit.draw(screen)
-            if fruit.y > HEIGHT: # If the fruit falls off the screen
+            if fruit.y > HEIGHT:  # If the fruit falls off the screen
                 lives -= 1
                 fruits.remove(fruit)
                 if lives <= 0:
@@ -103,31 +123,36 @@ while running:
         for bomb in bombs[:]:
             bomb.update()
             bomb.draw(screen)
-            if bomb.y > HEIGHT: # Remove bomb if it falls off screen
+            if bomb.y > HEIGHT:  # Remove bomb if it falls off screen
                 bombs.remove(bomb)
 
         # Blade drawing and slicing
-        if pygame.mouse.get_pressed()[0]: # Left mouse button
+        if pygame.mouse.get_pressed()[0]:  # Left mouse button
             blade_points.append(pygame.mouse.get_pos())
-            if len(blade_points) > 10: # Keep blade trail short
+            if len(blade_points) > 10:  # Keep blade trail short
                 blade_points.pop(0)
         else:
-            blade_points = [] # Clear blade if mouse not pressed
+            blade_points = []  # Clear blade if mouse not pressed
 
         draw_blade(screen, blade_points)
 
-        # Slicing detection and scoring (moved from top level)
+        # Slicing detection and scoring
         for fruit in fruits[:]:
             if fruit.check_slice(blade_points):
                 score += 10
                 play_slice_sound(slice_sound)
-                fruits.remove(fruit) # Remove sliced fruit
+                fruits.remove(fruit)  # Remove sliced fruit
 
         for bomb in bombs[:]:
             if bomb.check_slice(blade_points):
-                bomb_sound.play() # Play bomb sound on hit
+                bomb.explode(bomb_sound)  # Call explode method
                 current_game_state = GAME_OVER
-                game_over = True # Set game_over flag
+
+        # Score-based difficulty adjustment
+        if score > last_score_check:
+            max_fruits += 3
+            spawn_interval = max(1.0, spawn_interval - 0.2) # Minimum 1 second interval
+            last_score_check = score
 
         # Display score and lives
         score_text = font.render(f"Score: {score}", True, (255, 255, 255))
@@ -135,11 +160,10 @@ while running:
         screen.blit(score_text, (10, 10))
         screen.blit(lives_text, (WIDTH - lives_text.get_width() - 10, 10))
 
-        pygame.display.flip()
-
     elif current_game_state == GAME_OVER:
         game_over_screen()
 
+    pygame.display.flip()  # Update the full display Surface to the screen
     clock.tick(60)
 
 pygame.quit()
