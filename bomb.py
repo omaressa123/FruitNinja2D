@@ -10,7 +10,7 @@ class Bomb(Fruit):
         super().__init__("bomb.png", x, y, speed_x, speed_y) # Assuming 'bomb.png' for bomb image
         self.explosion_frames = []
         for i in range(1, 6): # Assuming explosion_frame_1.png to explosion_frame_5.png
-            self.explosion_frames.append(pygame.transform.scale(pygame.image.load(os.path.join("assets", f"explosion_frame_{i}.png")), (80, 80)))
+            self.explosion_frames.append(pygame.transform.scale(pygame.image.load(os.path.join("assets", f"explosion_frame_{i}.jpg")), (80, 80)))
         self.exploding = False
         self.explosion_index = 0
         self.explosion_timer = 0
