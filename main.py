@@ -16,9 +16,10 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Fruit Ninja 2D")
 
 # Load assets
-background = pygame.image.load(os.path.join("assets", "background.png")) # Assuming background.png exists in assets folder
-slice_sound = pygame.mixer.Sound(os.path.join("assets", "slice.wav")) # Assuming slice.wav exists in assets folder
-bomb_sound = pygame.mixer.Sound(os.path.join("assets", "bomb.wav")) # Assuming bomb.wav exists in assets folder
+background = pygame.image.load(os.path.join("assets", "images.jpeg")) 
+slice_sound = pygame.mixer.Sound(os.path.join("assets", "slice.wav")) 
+#bomb_sound = pygame.mixer.Sound(os.path.join("assets", "bomb.wav")) 
+background_music = pygame.mixer.Sound(os.path.join("assets", "audio BE 20251014015520.wav"))
 
 clock = pygame.time.Clock()
 font = pygame.font.Font(None, 40)
@@ -53,6 +54,7 @@ def game_over_screen():
     screen.blit(restart_text, (WIDTH // 2 - restart_text.get_width() // 2, HEIGHT // 2))
     pygame.display.flip()
 
+background_music.play(-1)  # Play background music indefinitely
 # Main game loop
 running = True
 while running:
