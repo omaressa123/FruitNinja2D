@@ -41,7 +41,7 @@ class Fruit:
 
     @staticmethod
     def spawn_random(screen_width, screen_height):
-        fruit_images = ["apple.png", "banana.png", "orange.png"] # Example fruit images
+        fruit_images = ["apple.png", "banana.png", "sandia.png"] # Example fruit images
         chosen_image = random.choice(fruit_images)
         x = random.randint(100, screen_width - 100)
         y = screen_height + 50
