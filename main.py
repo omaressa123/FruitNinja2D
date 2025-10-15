@@ -5,6 +5,7 @@ import os
 from fruit import Fruit
 from bomb import Bomb
 from effects import draw_blade, play_slice_sound
+from sliced_fruit import SlicedFruit
 
 # Initialize pygame
 pygame.init()
@@ -31,6 +32,7 @@ bombs = [] # Initialize bombs list
 score = 0
 lives = 3
 blade_points = []
+sliced_fruits = [] # Initialize sliced_fruits list
 
 # Game mechanics variables
 max_fruits = 3
@@ -89,6 +91,7 @@ while running:
                 spawn_interval = 2.0
                 spawn_timer = 0
                 last_score_check = 0
+                sliced_fruits = []
             elif current_game_state == GAME_OVER and event.key == pygame.K_SPACE:
                 current_game_state = GAME_PLAY
                 score = 0
@@ -99,6 +102,7 @@ while running:
                 spawn_interval = 2.0
                 spawn_timer = 0
                 last_score_check = 0
+                sliced_fruits = []
             elif event.key == pygame.K_ESCAPE:
                 running = False
 
@@ -141,12 +145,23 @@ while running:
             if fruit.check_slice(blade_points):
                 score += 10
                 play_slice_sound(slice_sound)
-                fruits.remove(fruit)  # Remove sliced fruit
+                # Instead of removing the fruit, create sliced halves
+                left_half, right_half = fruit.slice()
+                sliced_fruits.append(left_half)
+                sliced_fruits.append(right_half)
+                fruits.remove(fruit) # Remove sliced fruit immediately after creating halves
 
         for bomb in bombs[:]:
             if bomb.check_slice(blade_points):
                 bomb.explode(bomb_sound)  # Call explode method
                 current_game_state = GAME_OVER
+
+        # Update and draw sliced fruits
+        for s_fruit in sliced_fruits[:]:
+            s_fruit.update()
+            s_fruit.draw(screen)
+            if s_fruit.y > HEIGHT:  # Remove sliced fruit if it falls off the screen
+                sliced_fruits.remove(s_fruit)
 
         # Score-based difficulty adjustment
         if score > last_score_check:
